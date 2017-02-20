@@ -1,0 +1,111 @@
+----------------------------------------------------------------------------------
+-- Company: 
+-- Engineer: 
+-- 
+-- Create Date:    03:34:54 10/21/2015 
+-- Design Name: 
+-- Module Name:    muneca - Behavioral 
+-- Project Name: 
+-- Target Devices: 
+-- Tool versions: 
+-- Description: 
+--
+-- Dependencies: 
+--
+-- Revision: 
+-- Revision 0.01 - File Created
+-- Additional Comments: 
+--
+----------------------------------------------------------------------------------
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+-- Uncomment the following library declaration if using
+-- arithmetic functions with Signed or Unsigned values
+--use IEEE.NUMERIC_STD.ALL;
+
+-- Uncomment the following library declaration if instantiating
+-- any Xilinx primitives in this code.
+--library UNISIM;
+--use UNISIM.VComponents.all;
+
+entity muneca is
+	port (clk : in std_logic;
+		rst : in std_logic;
+		r : in std_logic; --Ruido
+		c : in std_logic;	--chupete
+		g : out std_logic; --muñeca ruido
+		l : out std_logic); -- muñeca llora
+end muneca;
+
+architecture Behavioral of muneca is
+	type t_state is (tranquila_st, dormida_st, asustada_st, hablando_st);
+	signal current_state, next_state : t_state;
+	
+begin
+	p_next_state:process (current_state, r, c)
+	begin
+		case current_state is
+			when tranquila_st =>
+				if r = '0' and c = '1' then
+					next_state <= dormida_st;
+				else if r = '1' and c = '0' then
+						next_state <= hablando_st;
+					else
+							next_state <= current_state;
+					end if;
+				end if;
+			when dormida_st => 
+				if r = '1' then
+					next_state <= asustada_st;
+				else
+					next_state <= current_state;
+				end if;
+			when asustada_st =>
+				if r = '0' and c = '1' then
+					next_state <= dormida_st;
+				else if r = '0' and c = '0' then
+					next_state <= tranquila_st;
+					else
+						next_state <= current_state;
+					end if;
+				end if;
+			when hablando_st => 
+				if c = '1' then
+					next_state <= dormida_st;
+				else
+					next_state <= current_state;
+				end if;
+			end case;
+	end process p_next_state;
+	
+	p_out:process (current_state)
+	begin
+		case current_state is
+			when tranquila_st =>
+				g <= '0';
+				l <= '0';
+			when dormida_st =>
+				g <= '0';
+				l <= '0';
+			when asustada_st =>
+				g <= '1';
+				l <= '1';
+			when hablando_st =>
+				g <= '1';
+				l <= '0';
+		end case;
+	end process p_out;
+	
+	p_reg:process (clk, rst)
+	begin
+		if rst = '0' then
+			current_state <= tranquila_st;
+		else if rising_edge(clk) then
+			current_state <= next_state;
+			else
+			current_state <= current_state;
+			end if;
+		end if;
+	end process p_reg;
+end Behavioral;
